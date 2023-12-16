@@ -6,13 +6,11 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-const port = 3000;
-
-
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
+const port = 3000;
 
 // Use the router for handling routes
 app.use(router);

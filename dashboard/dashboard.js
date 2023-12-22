@@ -65,11 +65,11 @@ const updateSOPData = (req, res) => {
 
 function addScreen(req, res){
     const {screenName}  = req.body;
-    const insertScreenQuery = `INSERT INTO SOP_content(ScreenName) VALUES ?`;
+    const insertScreenQuery = `INSERT INTO screens(ScreenName) VALUES (?)`;
 
     db.query(insertScreenQuery , [ screenName ] , (InsertSOPError , InserSOPResult) => { 
         if ( InsertSOPError) {
-            res.status(401).json({message : 'Error while inserting data', InsertSOPError})
+            return res.status(401).json({message : 'Error while inserting data', InsertSOPError})
         }
 
         res.status(200).json({message : 'Data sucessfully inserted'}) //success status

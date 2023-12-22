@@ -46,7 +46,7 @@ function getUserById(req, res){
 function getUsers(req, res){
   
   const fetchUserId =`SELECT * FROM SOP_users WHERE UserName = ?`;
-  const getUserByUserQuery = `SELECT * FROM SOP_users`;
+  const getUserByUserQuery = `SELECT * FROM SOP_users WHERE `;
 
   db.query(getUserByUserQuery, (fetchUserIdError, fetchUserIdResult) =>{
     if(fetchUserIdError){

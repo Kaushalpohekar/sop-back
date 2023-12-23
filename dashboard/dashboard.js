@@ -4,7 +4,7 @@ const db = require('../db');
 
 function InsertSOPData(req,res){
     const {fileName, filePath, screen , duration}  = req.body;
-    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenNo , Duration ) VALUES (?,?,?,?)`;
+    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenNo , Duration, TimeStamp ) VALUES (?,?,?,?, NOW()  )`;
 
     db.query(insertSOPInputQuery , [ fileName, filePath, screen , duration ] , (InsertSOPError , InserSOPResult) => { 
         if ( InsertSOPError) {
@@ -104,10 +104,25 @@ function getAllscreens(req,res){
     });
 }
 
+function updateScreen(req, res){
+    const {screenName} = req.body;
+    const screenId = req.params.screenId;
+    const updateScreenQuery = `Update screens SET ScreenName = ? WHERE ScreenID = ?`
+    db.query(updateScreenQuery, [screenName, screenId], (updateScreenError , updateScreenResult) =>{
+        if(updateScreenError){
+            return res.status(401).json({messsage : 'error while updating Screen', updateScreenError});
+        }
+        if(updateScreenResult.affectedRows === 0){
+            return res.status(404).json({message : 'no rows affected'});
+        }
+        res.status(200).json({message : 'Successfully updated screen data'});
+    });
+}
+
 function getContentForScreen(req, res){
-    const {ScreenID} = req.body;
-    const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenID = ?`;
-    db.query(getContentQuery,[ScreenID], (getContentError, getContentResult) =>{
+    const { screenName } = req.params.screenName;
+    const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenName = ?`;
+    db.query(getContentQuery,[screenName], (getContentError, getContentResult) =>{
         if(getContentError){
             return res.status(401).json({message : 'Error while retriving data', error : getContentError})
         }
@@ -125,5 +140,6 @@ module.exports = {
     deleteScreen,
     getAllscreens,
     getContentForScreen,
+    updateScreen,
 }
 

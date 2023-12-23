@@ -19,11 +19,12 @@ router.delete('/deleteSOPData/:ID', dash.deleteSOPData);
 router.put('/updateSOPData/:ID',dash.updateSOPData);
 
 //Screens Routes
-router.post('/AddScreen',dash.addScreen);
+router.post('/addScreen',dash.addScreen);
 router.get('/getAllScreens',dash.getAllscreens);
 router.delete('/deleteScreen/:ID',dash.deleteScreen);
+router.put('/updateScreen/:screenName', dash.updateScreen);
 
 //Screen Display Routes
-router.get('/getContentForScreen/:ID', dash.getContentForScreen);
+router.get('/getContentForScreen/:ScreenID', dash.getContentForScreen);
 
 module.exports = router;

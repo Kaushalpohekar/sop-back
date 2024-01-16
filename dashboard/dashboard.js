@@ -4,7 +4,7 @@ const db = require('../db');
 
 function InsertSOPData(req,res){
     const {fileName, filePath, screen , duration}  = req.body;
-    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenName , Duration, TimeStamp ) VALUES (?,?,?,?, NOW()  )`;
+    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenID , Duration, TimeStamp ) VALUES (?,?,?,?, NOW()  )`;
 
     db.query(insertSOPInputQuery , [ fileName, filePath, screen , duration ] , (InsertSOPError , InserSOPResult) => { 
         if ( InsertSOPError) {

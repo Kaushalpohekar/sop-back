@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
+//const bcrypt = require('bcrypt');
 const db = require('../db');
-const jwt = require("jsonwebtoken");
+//const jwt = require("jsonwebtoken");
 
 function registerUser(req,res){
   const{userName, password, firstName, lastName, contactNo, userType, companyEmail, location, companyName}=req.body

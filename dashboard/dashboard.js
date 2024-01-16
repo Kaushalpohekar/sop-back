@@ -4,14 +4,14 @@ const db = require('../db');
 
 function InsertSOPData(req,res){
     const {fileName, filePath, screen , duration}  = req.body;
-    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenNo , Duration, TimeStamp ) VALUES (?,?,?,?, NOW()  )`;
+    const insertSOPInputQuery = `INSERT INTO SOP_content(FileName , FilePath , ScreenName , Duration, TimeStamp ) VALUES (?,?,?,?, NOW()  )`;
 
     db.query(insertSOPInputQuery , [ fileName, filePath, screen , duration ] , (InsertSOPError , InserSOPResult) => { 
         if ( InsertSOPError) {
-            res.status(401).json({message : 'Error while inserting data', InsertSOPError})
+           return res.status(401).json({message : 'Error while inserting data', InsertSOPError})
         }
 
-        res.status(200).json({message : 'Data sucessfully inserted'}) //success status
+        return res.status(200).json({message : 'Data sucessfully inserted'}) //success status
     }); 
 }
 

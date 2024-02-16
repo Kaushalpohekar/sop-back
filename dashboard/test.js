@@ -1,6 +1,5 @@
 const db = require('../db');
 const fs = require('fs');
-const mime = require('mimetype');
 
 
 //content CRUD
@@ -156,54 +155,6 @@ function getContentForScreen(req, res){
     });
 }
 
-async function getSOPDataByScreenId(req, res) {
-  const { screenId } = req.params;
-
-  const getSOPDataQuery = `
-    SELECT FileName, FilePath, ScreenID, Duration, TimeStamp
-    FROM SOP_content
-    WHERE ScreenID = ? order by ID ASC
-  `;
-
-  db.query(getSOPDataQuery, [screenId], async (getSOPError, getSOPResult) => {
-    if (getSOPError) {
-      return res.status(500).json({ message: 'Error while retrieving data', error: getSOPError });
-    }
-
-    if (getSOPResult.length === 0) {
-      return res.status(404).json({ message: 'No data found for the given screenId' });
-    }
-
-    // Read the file asynchronously and convert to base64
-    const responseData = getSOPResult.map(async (row) => {
-      try {
-        const fileData = await fs.promises.readFile(row.FilePath);
-        const mimeType = mime.lookup(row.FilePath);
-        const base64Data = fileData.toString('base64');
-        return {
-          FileName: row.FileName,
-          ScreenID: row.ScreenID,
-          Duration: row.Duration,
-          TimeStamp: row.TimeStamp,
-          Base64File: {
-            data: base64Data,
-            mimeType: mimeType,
-          },
-        };
-      } catch (readFileError) {
-        console.error('Error reading file:', readFileError);
-        return null;
-      }
-    });
-
-    // Wait for all asynchronous file reads to complete
-    Promise.all(responseData).then((data) => {
-      const validData = data.filter((item) => item !== null);
-      return res.status(200).json({ message: 'Data successfully retrieved', data: validData });
-    });
-  });
-}
-
 module.exports = {
     InsertSOPData,
     getSOPData,
@@ -214,6 +165,5 @@ module.exports = {
     getAllscreens,
     getContentForScreen,
     updateScreen,
-    getSOPDataByScreenId
 }
 

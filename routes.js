@@ -24,7 +24,7 @@ router.put('/updateSOPData/:ID',dash.updateSOPData);
 router.post('/addScreen',dash.addScreen);
 router.get('/getAllScreens',dash.getAllscreens);
 router.delete('/deleteScreen/:ID',dash.deleteScreen);
-router.put('/updateScreen/:screenName', dash.updateScreen);
+router.put('/updateScreen/:screenId', dash.updateScreen);
 
 //Screen Display Routes
 router.get('/getSOPDataByScreenId/:screenId', dash.getSOPDataByScreenId);

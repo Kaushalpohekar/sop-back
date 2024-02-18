@@ -1,6 +1,7 @@
 const db = require('../db');
 const fs = require('fs');
 const mime = require('mimetype');
+const pdf2pic = require('pdf2pic');
 
 
 //content CRUD
@@ -35,6 +36,7 @@ function InsertSOPData(req, res) {
     }
   );
 }
+
 
 function getSOPData (req, res){
     const getSOPDataQuery = ' SELECT * FROM SOP_content';

@@ -17,7 +17,7 @@ router.delete('/deleteUser/:userId', auth.deleteUser);
 //Dashboard Routes
 router.post('/InsertSOPData', upload.single('file'), dash.InsertSOPData);
 router.get('/getSOPData' , dash.getSOPData);
-router.delete('/deleteSOPData/:ID', dash.deleteSOPData);
+router.delete('/deleteSOPData/:FileName', dash.deleteSOPData);
 router.put('/updateSOPData/:ID',dash.updateSOPData);
 
 //Screens Routes

@@ -38,34 +38,97 @@ function InsertSOPData(req, res) {
 }
 
 
-function getSOPData (req, res){
-    const getSOPDataQuery = ' SELECT * FROM SOP_content';
-    db.query(getSOPDataQuery , (getSOPDataError , getSOPDataResult) => {
-        if (getSOPDataError) {
-            res.status(401).json({message : 'Error while Fetching Data' , getSOPDataError})
-        }
+function getSOPData(req, res) {
+    try {
+        const getSOPDataQuery = ' SELECT * FROM SOP_content';
 
-        if(getSOPDataResult.length === 0 ){ 
-            res.status(404).json({message : ' No data Found '})
-        }
-        
-        res.json({ getSOPData : getSOPDataResult});
-
-    });
-
+        db.query(getSOPDataQuery, (getSOPDataError, getSOPDataResult) => {
+            if (getSOPDataError) {
+                // Use a try-catch block here to catch any potential errors
+                try {
+                    throw getSOPDataError; // Throw the error to catch it in the catch block
+                } catch (error) {
+                    res.status(401).json({ message: 'Error while Fetching Data', error: error.message });
+                }
+            } else {
+                if (getSOPDataResult.length === 0) {
+                    res.status(404).json({ message: 'No data found' });
+                } else {
+                    res.json({ getSOPData: getSOPDataResult });
+                }
+            }
+        });
+    } catch (error) {
+        // Handle any synchronous errors outside of the callback
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
 }
 
-function deleteSOPData(req,res){
-    const ID = req.params.ID;
-    const deleteSOPDataQuery = `DELETE FROM SOP_content WHERE ID = ? `;
-    db.query(deleteSOPDataQuery , [ID], (deleteSOPDataError , deleteSOPResult) => {
-        if(deleteSOPDataError){
-            res.status(401).json({message:'Error while Deleting Error'},deleteSOPDataError)
-        }
 
-        res.status(200).json({message : 'Data Deleted Successfully'});
-    })
-} 
+// function deleteSOPData(req, res) {
+//     const FileName = req.params.FileName;
+//     const deleteSOPDataQuery = `DELETE FROM SOP_content WHERE FileName = ? `;
+
+//     try {
+//         db.query(deleteSOPDataQuery, [FileName], (deleteSOPDataError, deleteSOPResult) => {
+//             if (deleteSOPDataError) {
+//                 res.status(401).json({ message: 'Error while Deleting Data', error: deleteSOPDataError.message });
+//             } else {
+//                 // Access the FilePath from the result or wherever it is stored in your database
+//                 const filePath = deleteSOPResult[0].FilePath; // Make sure to adjust this based on your actual structure
+
+//                 // Use fs.unlink to delete the file
+//                 fs.unlink(filePath, (unlinkError) => {
+//                     if (unlinkError) {
+//                         res.status(500).json({ message: 'Error while deleting file', error: unlinkError.message });
+//                     } else {
+//                         res.status(200).json({ message: 'Data and file deleted successfully' });
+//                     }
+//                 });
+//             }
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: 'Internal Server Error', error: error.message });
+//     }
+// }
+function deleteSOPData(req, res) {
+    const FileName = req.params.FileName;
+    const selectSOPDataQuery = `SELECT FilePath FROM SOP_content WHERE FileName = ?`;
+
+    try {
+        db.query(selectSOPDataQuery, [FileName], (selectSOPDataError, selectSOPResult) => {
+            if (selectSOPDataError) {
+                res.status(401).json({ message: 'Error while fetching data', error: selectSOPDataError.message });
+            } else {
+                if (selectSOPResult.length === 0) {
+                    res.status(404).json({ message: 'Data not found for the given FileName' });
+                } else {
+                    const filePath = selectSOPResult[0].FilePath;
+
+                    const deleteSOPDataQuery = `DELETE FROM SOP_content WHERE FileName = ?`;
+
+                    db.query(deleteSOPDataQuery, [FileName], (deleteSOPDataError) => {
+                        if (deleteSOPDataError) {
+                            res.status(401).json({ message: 'Error while deleting data', error: deleteSOPDataError.message });
+                        } else {
+                            // Use fs.unlink to delete the file
+                            fs.unlink(filePath, (unlinkError) => {
+                                if (unlinkError) {
+                                    res.status(500).json({ message: 'Error while deleting file', error: unlinkError.message });
+                                } else {
+                                    res.status(200).json({ message: 'Data and file deleted successfully' });
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+}
+
 
 
 const updateSOPData = (req, res) => {
@@ -146,17 +209,30 @@ function updateScreen(req, res){
     });
 }
 
-function getContentForScreen(req, res){
-    const { screenName } = req.params.screenName;
-    const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenName = ?`;
-    db.query(getContentQuery,[screenName], (getContentError, getContentResult) =>{
-        if(getContentError){
-            return res.status(401).json({message : 'Error while retriving data', error : getContentError})
-        }
-        screenData = getContentResult
-        res.json({getContentForScreen : screenData});
-    });
+function getContentForScreen(req, res) {
+    try {
+        const { screenName } = req.params;
+        const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenName = ?`;
+        
+        db.query(getContentQuery, [screenName], (getContentError, getContentResult) => {
+            if (getContentError) {
+                // Use a try-catch block here to catch any potential errors
+                try {
+                    throw getContentError; // Throw the error to catch it in the catch block
+                } catch (error) {
+                    res.status(401).json({ message: 'Error while retrieving data', error: error.message });
+                }
+            } else {
+                const screenData = getContentResult;
+                res.json({ getContentForScreen: screenData });
+            }
+        });
+    } catch (error) {
+        // Handle any synchronous errors outside of the callback
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
 }
+
 
 async function getSOPDataByScreenId(req, res) {
   const { screenId } = req.params;
@@ -169,7 +245,7 @@ async function getSOPDataByScreenId(req, res) {
 
   db.query(getSOPDataQuery, [screenId], async (getSOPError, getSOPResult) => {
     if (getSOPError) {
-      return res.status(500).json({ message: 'Error while retrieving data', error: getSOPError });
+      return res.status(500).json({ message: 'Error while retrieving data'});
     }
 
     if (getSOPResult.length === 0) {

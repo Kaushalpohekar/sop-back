@@ -2,26 +2,17 @@ const db = require('../db');
 const fs = require('fs');
 const mime = require('mimetype');
 const pdf2pic = require('pdf2pic');
+const { v4: uuidv4 } = require('uuid');
 
 
 //content CRUD
 
 function InsertSOPData(req, res) {
-  const { fileName, base64Data, screen, duration } = req.body;
-
-  // Use timestamp to generate a unique filename
-  const timestamp = Date.now();
-  const uniqueFileName = `${timestamp}_${fileName}`;
-
-  // Convert base64 to buffer
-  const decodedFile = Buffer.from(base64Data, 'base64');
-
-  // Use Multer to handle file upload
-  fs.writeFileSync(`./uploads/${uniqueFileName}`, decodedFile);
+  const { screenId, header, subheader, data } = req.body;
 
   const insertSOPInputQuery = `
-    INSERT INTO SOP_content(FileName, FilePath, ScreenID, Duration, TimeStamp)
-    VALUES (?, ?, ?, ?, NOW())
+    INSERT INTO (contentId, ScreenID, table_header, table_subheader)
+    VALUES (?, ?, ?, ?)
   `;
 
   db.query(
@@ -64,33 +55,6 @@ function getSOPData(req, res) {
     }
 }
 
-
-// function deleteSOPData(req, res) {
-//     const FileName = req.params.FileName;
-//     const deleteSOPDataQuery = `DELETE FROM SOP_content WHERE FileName = ? `;
-
-//     try {
-//         db.query(deleteSOPDataQuery, [FileName], (deleteSOPDataError, deleteSOPResult) => {
-//             if (deleteSOPDataError) {
-//                 res.status(401).json({ message: 'Error while Deleting Data', error: deleteSOPDataError.message });
-//             } else {
-//                 // Access the FilePath from the result or wherever it is stored in your database
-//                 const filePath = deleteSOPResult[0].FilePath; // Make sure to adjust this based on your actual structure
-
-//                 // Use fs.unlink to delete the file
-//                 fs.unlink(filePath, (unlinkError) => {
-//                     if (unlinkError) {
-//                         res.status(500).json({ message: 'Error while deleting file', error: unlinkError.message });
-//                     } else {
-//                         res.status(200).json({ message: 'Data and file deleted successfully' });
-//                     }
-//                 });
-//             }
-//         });
-//     } catch (error) {
-//         res.status(500).json({ message: 'Internal Server Error', error: error.message });
-//     }
-// }
 function deleteSOPData(req, res) {
     const FileName = req.params.FileName;
     const selectSOPDataQuery = `SELECT FilePath FROM SOP_content WHERE FileName = ?`;
@@ -282,6 +246,144 @@ async function getSOPDataByScreenId(req, res) {
   });
 }
 
+
+async function InsertSOPTextData(req, res) {
+  const { screenId, header, subheader, color, font, interval } = req.body;
+
+  // Validate incoming parameters if needed
+  if (!screenId || !header || !subheader || !color || !font || !interval) {
+    return res.status(400).json({ message: 'Missing required parameters' });
+  }
+
+  const contentId = uuidv4(); // Generate unique contentId
+
+  const insertContentQuery = `
+    INSERT INTO Content (contentId, ScreenID, table_header, table_subheader, color, font, interval_number)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  try {
+    // Insert into Content table
+    await db.query(insertContentQuery, [contentId, screenId, header, subheader, color, font, interval]);
+
+    res.status(200).json({ message: 'Data successfully inserted' });
+  } catch (error) {
+    console.error('Error while inserting data:', error);
+    res.status(500).json({ message: 'Error while inserting data' });
+  }
+}
+
+async function InsertSOPTextContentData(req, res) {
+  const { contentId, raw_material, value, highlight } = req.body;
+
+  // Validate incoming parameters if needed
+  if (!contentId || !raw_material || !value || !highlight) {
+    return res.status(400).json({ message: 'Missing required parameters' });
+  }
+
+  const contentDataId = uuidv4(); // Generate unique contentDataId
+
+  const insertContentQuery = `
+    INSERT INTO ContentData (contentDataId, contentId, raw_material, value, highlight)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  try {
+    // Insert into ContentData table
+    await db.query(insertContentQuery, [contentDataId, contentId, raw_material, value, highlight]);
+
+    res.status(200).json({ message: 'Data successfully inserted' });
+  } catch (error) {
+    console.error('Error while inserting data:', error);
+    res.status(500).json({ message: 'Error while inserting data' });
+  }
+}
+
+function getAllTextData(req, res) {
+    // Query to fetch all content items
+    const getContentQuery = `
+        SELECT *
+        FROM Content
+    `;
+    
+    db.query(getContentQuery, (getContentError, getContentResult) => {
+        if (getContentError) {
+            // Handle query error for Content
+            return res.status(500).json({ message: 'Error while Fetching Content', error: getContentError });
+        }
+
+        if (getContentResult.length === 0) {
+            // No data found in Content
+            return res.status(404).json({ message: 'No Content Found' });
+        }
+
+        // Initialize array to store transformed data for each content item
+        const transformedDataArray = [];
+
+        // Function to fetch ContentData for a specific contentId
+        const fetchContentData = (contentId) => {
+            return new Promise((resolve, reject) => {
+                const getContentDataQuery = `
+                    SELECT *
+                    FROM ContentData
+                    WHERE content_id = ?
+                `;
+        
+                db.query(getContentDataQuery, [contentId], (getContentDataError, getContentDataResult) => {
+                    if (getContentDataError) {
+                        // Reject with error if ContentData query fails
+                        reject(getContentDataError);
+                    } else {
+                        // Resolve with ContentData result
+                        resolve(getContentDataResult);
+                    }
+                });
+            });
+        };
+
+        // Process each content item to fetch corresponding ContentData
+        Promise.all(getContentResult.map(contentItem => {
+            return fetchContentData(contentItem.contentId)
+                .then(contentData => {
+                    // Transform each content item and its associated contentData
+                    const transformedData = {
+                        contentId: contentItem.contentId,
+                        screenId: contentItem.ScreenID.toString(), // Assuming ScreenID is consistent across results
+                        header: contentItem.table_header,
+                        subheader: contentItem.table_subheader,
+                        font_size: contentItem.font,
+                        color: contentItem.color,
+                        interval: contentItem.interval_number,
+                        data: contentData.map(item => ({
+                            contentDataId: item.content_data_id,
+                            raw_material: item.raw_material,
+                            value: item.value,
+                            highlight: item.highlight
+                        }))
+                    };
+
+                    // Push transformed data into transformedDataArray
+                    transformedDataArray.push(transformedData);
+                })
+                .catch(error => {
+                    // Handle individual fetch error if needed
+                    console.error(`Error fetching ContentData for contentId ${contentItem.contentId}:`, error);
+                });
+        }))
+        .then(() => {
+            // Send the array of transformed data as a response
+            res.json(transformedDataArray);
+        })
+        .catch(allError => {
+            // Handle any error occurred during Promise.all
+            console.error('Error processing Content and ContentData:', allError);
+            res.status(500).json({ message: 'Error processing Content and ContentData', error: allError });
+        });
+    });
+}
+
+
+
 module.exports = {
     InsertSOPData,
     getSOPData,
@@ -292,6 +394,9 @@ module.exports = {
     getAllscreens,
     getContentForScreen,
     updateScreen,
-    getSOPDataByScreenId
+    getSOPDataByScreenId,
+    InsertSOPTextData,
+    InsertSOPTextContentData,
+    getAllTextData
 }
 

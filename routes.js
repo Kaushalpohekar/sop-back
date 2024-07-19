@@ -20,6 +20,10 @@ router.get('/getSOPData' , dash.getSOPData);
 router.delete('/deleteSOPData/:FileName', dash.deleteSOPData);
 router.put('/updateSOPData/:ID',dash.updateSOPData);
 
+router.post('/InsertSOPTextData', dash.InsertSOPTextData);
+router.post('/InsertSOPTextContentData', dash.InsertSOPTextContentData);
+router.get('/getAllTextData', dash.getAllTextData);
+
 //Screens Routes
 router.post('/addScreen',dash.addScreen);
 router.get('/getAllScreens',dash.getAllscreens);

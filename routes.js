@@ -22,7 +22,9 @@ router.put('/updateSOPData/:ID',dash.updateSOPData);
 
 router.post('/InsertSOPTextData', dash.InsertSOPTextData);
 router.post('/InsertSOPTextContentData', dash.InsertSOPTextContentData);
-router.get('/getAllTextData', dash.getAllTextData);
+router.get('/getAllTextData/:screenId', dash.getAllTextData);
+router.put('/UpdateSOPTextData', dash.UpdateSOPTextData);
+router.put('/UpdateSOPTextContentData', dash.UpdateSOPTextContentData);
 
 //Screens Routes
 router.post('/addScreen',dash.addScreen);

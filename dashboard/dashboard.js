@@ -8,24 +8,34 @@ const { v4: uuidv4 } = require('uuid');
 //content CRUD
 
 function InsertSOPData(req, res) {
-  const { screenId, header, subheader, data } = req.body;
+    const { fileName, base64Data, screen, duration } = req.body;
 
-  const insertSOPInputQuery = `
-    INSERT INTO (contentId, ScreenID, table_header, table_subheader)
-    VALUES (?, ?, ?, ?)
-  `;
+    // Use timestamp to generate a unique filename
+    const timestamp = Date.now();
+    const uniqueFileName = `${timestamp}_${fileName}`;
 
-  db.query(
-    insertSOPInputQuery,
-    [uniqueFileName, `./uploads/${uniqueFileName}`, screen, duration],
-    (InsertSOPError, InsertSOPResult) => {
-      if (InsertSOPError) {
-        return res.status(401).json({ message: 'Error while inserting data', InsertSOPError });
-      }
+    // Convert base64 to buffer
+    const decodedFile = Buffer.from(base64Data, 'base64');
 
-      return res.status(200).json({ message: 'Data successfully inserted' });
-    }
-  );
+    // Use Multer to handle file upload
+    fs.writeFileSync(`./uploads/${uniqueFileName}`, decodedFile);
+
+    const insertSOPInputQuery = `
+      INSERT INTO SOP_content(FileName, FilePath, ScreenID, Duration, TimeStamp)
+      VALUES (?, ?, ?, ?, NOW())
+    `;
+
+    db.query(
+        insertSOPInputQuery,
+        [uniqueFileName, `./uploads/${uniqueFileName}`, screen, duration],
+        (InsertSOPError, InsertSOPResult) => {
+            if (InsertSOPError) {
+                return res.status(401).json({ message: 'Error while inserting data', InsertSOPError });
+            }
+
+            return res.status(200).json({ message: 'Data successfully inserted' });
+        }
+    );
 }
 
 
@@ -97,50 +107,50 @@ function deleteSOPData(req, res) {
 
 const updateSOPData = (req, res) => {
     const ID = req.params.ID;
-    const {fileName, filePath, screen , duration}  = req.body;
+    const { fileName, filePath, screen, duration } = req.body;
     const UpdateSOPDataQuery = `UPDATE SOP_content fileName = ?, filePath = ?, screenNo = ?, Duration = ? WHERE ID = ?`;
-    db.query(UpdateSOPDataQuery, [fileName, filePath, screen , duration, ID], (UpdateSOPDataError, UpdateSOPDataResult) =>{
-        if(UpdateSOPDataError){
-            res.status(401).json({message : 'error while updating SOP Data', UpdateSOPDataError});
+    db.query(UpdateSOPDataQuery, [fileName, filePath, screen, duration, ID], (UpdateSOPDataError, UpdateSOPDataResult) => {
+        if (UpdateSOPDataError) {
+            res.status(401).json({ message: 'error while updating SOP Data', UpdateSOPDataError });
         }
-        if(!UpdateSOPDataResult){
-            res.status(404).json({mesage : 'update not done'})
+        if (!UpdateSOPDataResult) {
+            res.status(404).json({ mesage: 'update not done' })
         }
-        res.status(200).json({message : 'successfully updated SOP data'});
+        res.status(200).json({ message: 'successfully updated SOP data' });
     });
 }
 
 
 //Screen CRUD
 
-function addScreen(req, res){
-    const {screenName}  = req.body;
+function addScreen(req, res) {
+    const { screenName } = req.body;
     const insertScreenQuery = `INSERT INTO screens(ScreenName) VALUES (?)`;
 
-    db.query(insertScreenQuery , [ screenName ] , (InsertSOPError , InserSOPResult) => { 
-        if ( InsertSOPError) {
-            return res.status(401).json({message : 'Error while inserting data', InsertSOPError})
+    db.query(insertScreenQuery, [screenName], (InsertSOPError, InserSOPResult) => {
+        if (InsertSOPError) {
+            return res.status(401).json({ message: 'Error while inserting data', InsertSOPError })
         }
 
-        res.status(200).json({message : 'Data sucessfully inserted'}) //success status
-    }); 
+        res.status(200).json({ message: 'Data sucessfully inserted' }) //success status
+    });
 }
 
-function deleteScreen(req,res){
+function deleteScreen(req, res) {
     const ID = req.params.ID;
     const deleteSOPDataQuery = `DELETE FROM screens WHERE ScreenID = ? `;
-    db.query(deleteSOPDataQuery , [ID], (deleteSOPDataError , deleteSOPResult) => {
-        if(deleteSOPDataError){
-            res.status(401).json({message:'Error while Deleting Error'},deleteSOPDataError)
+    db.query(deleteSOPDataQuery, [ID], (deleteSOPDataError, deleteSOPResult) => {
+        if (deleteSOPDataError) {
+            res.status(401).json({ message: 'Error while Deleting Error' }, deleteSOPDataError)
         }
 
-        res.status(200).json({message : 'Data Deleted Successfully'});
+        res.status(200).json({ message: 'Data Deleted Successfully' });
     })
 }
 
 function getAllscreens(req, res) {
     const getSOPDataQuery = 'SELECT * FROM screens';
-    
+
     db.query(getSOPDataQuery, (getSOPDataError, getSOPDataResult) => {
         if (getSOPDataError) {
             // Send an error response and return to avoid further execution
@@ -158,18 +168,18 @@ function getAllscreens(req, res) {
 }
 
 
-function updateScreen(req, res){
-    const {screenName} = req.body;
+function updateScreen(req, res) {
+    const { screenName } = req.body;
     const screenId = req.params.screenId;
     const updateScreenQuery = `Update screens SET ScreenName = ? WHERE ScreenID = ?`
-    db.query(updateScreenQuery, [screenName, screenId], (updateScreenError , updateScreenResult) =>{
-        if(updateScreenError){
-            return res.status(401).json({messsage : 'error while updating Screen', updateScreenError});
+    db.query(updateScreenQuery, [screenName, screenId], (updateScreenError, updateScreenResult) => {
+        if (updateScreenError) {
+            return res.status(401).json({ messsage: 'error while updating Screen', updateScreenError });
         }
-        if(updateScreenResult.affectedRows === 0){
-            return res.status(404).json({message : 'no rows affected'});
+        if (updateScreenResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'no rows affected' });
         }
-        res.status(200).json({message : 'Successfully updated screen data'});
+        res.status(200).json({ message: 'Successfully updated screen data' });
     });
 }
 
@@ -177,7 +187,7 @@ function getContentForScreen(req, res) {
     try {
         const { screenName } = req.params;
         const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenName = ?`;
-        
+
         db.query(getContentQuery, [screenName], (getContentError, getContentResult) => {
             if (getContentError) {
                 // Use a try-catch block here to catch any potential errors
@@ -199,114 +209,114 @@ function getContentForScreen(req, res) {
 
 
 async function getSOPDataByScreenId(req, res) {
-  const { screenId } = req.params;
+    const { screenId } = req.params;
 
-  const getSOPDataQuery = `
+    const getSOPDataQuery = `
     SELECT FileName, FilePath, ScreenID, Duration, TimeStamp
     FROM SOP_content
     WHERE ScreenID = ? order by ID ASC
   `;
 
-  db.query(getSOPDataQuery, [screenId], async (getSOPError, getSOPResult) => {
-    if (getSOPError) {
-      return res.status(500).json({ message: 'Error while retrieving data'});
-    }
+    db.query(getSOPDataQuery, [screenId], async (getSOPError, getSOPResult) => {
+        if (getSOPError) {
+            return res.status(500).json({ message: 'Error while retrieving data' });
+        }
 
-    if (getSOPResult.length === 0) {
-      return res.status(404).json({ message: 'No data found for the given screenId' });
-    }
+        if (getSOPResult.length === 0) {
+            return res.status(404).json({ message: 'No data found for the given screenId' });
+        }
 
-    // Read the file asynchronously and convert to base64
-    const responseData = getSOPResult.map(async (row) => {
-      try {
-        const fileData = await fs.promises.readFile(row.FilePath);
-        const mimeType = mime.lookup(row.FilePath);
-        const base64Data = fileData.toString('base64');
-        return {
-          FileName: row.FileName,
-          ScreenID: row.ScreenID,
-          Duration: row.Duration,
-          TimeStamp: row.TimeStamp,
-          Base64File: {
-            data: base64Data,
-            mimeType: mimeType,
-          },
-        };
-      } catch (readFileError) {
-        console.error('Error reading file:', readFileError);
-        return null;
-      }
+        // Read the file asynchronously and convert to base64
+        const responseData = getSOPResult.map(async (row) => {
+            try {
+                const fileData = await fs.promises.readFile(row.FilePath);
+                const mimeType = mime.lookup(row.FilePath);
+                const base64Data = fileData.toString('base64');
+                return {
+                    FileName: row.FileName,
+                    ScreenID: row.ScreenID,
+                    Duration: row.Duration,
+                    TimeStamp: row.TimeStamp,
+                    Base64File: {
+                        data: base64Data,
+                        mimeType: mimeType,
+                    },
+                };
+            } catch (readFileError) {
+                console.error('Error reading file:', readFileError);
+                return null;
+            }
+        });
+
+        // Wait for all asynchronous file reads to complete
+        Promise.all(responseData).then((data) => {
+            const validData = data.filter((item) => item !== null);
+            return res.status(200).json({ message: 'Data successfully retrieved', data: validData });
+        });
     });
-
-    // Wait for all asynchronous file reads to complete
-    Promise.all(responseData).then((data) => {
-      const validData = data.filter((item) => item !== null);
-      return res.status(200).json({ message: 'Data successfully retrieved', data: validData });
-    });
-  });
 }
 
 
-async function InsertSOPTextData(req, res) {
-  const { screenId, header, subheader, color, font, interval } = req.body;
+function InsertSOPTextData(req, res) {
+    const { screenId, header, subheader, color, font_size, interval } = req.body;
 
-  // Validate incoming parameters if needed
-  if (!screenId || !header || !subheader || !color || !font || !interval) {
-    return res.status(400).json({ message: 'Missing required parameters' });
-  }
+    // Validate incoming parameters
+    if (!screenId || !header || !subheader || !color || !font_size || !interval) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+    }
 
-  const contentId = uuidv4(); // Generate unique contentId
+    const contentId = uuidv4(); // Generate unique contentId
 
-  const insertContentQuery = `
+    const insertContentQuery = `
     INSERT INTO Content (contentId, ScreenID, table_header, table_subheader, color, font, interval_number)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  try {
     // Insert into Content table
-    await db.query(insertContentQuery, [contentId, screenId, header, subheader, color, font, interval]);
+    db.query(insertContentQuery, [contentId, screenId, header, subheader, color, font_size, interval], (error) => {
+        if (error) {
+            console.error('Error while inserting data:', error);
+            return res.status(500).json({ message: 'Error while inserting data' });
+        }
 
-    res.status(200).json({ message: 'Data successfully inserted' });
-  } catch (error) {
-    console.error('Error while inserting data:', error);
-    res.status(500).json({ message: 'Error while inserting data' });
-  }
+        res.status(200).json({ message: 'Data successfully inserted' });
+    });
 }
 
-async function InsertSOPTextContentData(req, res) {
-  const { contentId, raw_material, value, highlight } = req.body;
+function InsertSOPTextContentData(req, res) {
+    const { contentId, raw_material, value, highlight } = req.body;
 
-  // Validate incoming parameters if needed
-  if (!contentId || !raw_material || !value || !highlight) {
-    return res.status(400).json({ message: 'Missing required parameters' });
-  }
+    // Validate incoming parameters if needed
+    if (!contentId || !raw_material || !value) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+    }
 
-  const contentDataId = uuidv4(); // Generate unique contentDataId
+    const contentDataId = uuidv4(); // Generate unique contentDataId
 
-  const insertContentQuery = `
-    INSERT INTO ContentData (contentDataId, contentId, raw_material, value, highlight)
-    VALUES (?, ?, ?, ?, ?)
-  `;
+    const insertContentQuery = `
+        INSERT INTO ContentData (content_data_id, content_id, raw_material, value, highlight)
+        VALUES (?, ?, ?, ?, ?)
+    `;
 
-  try {
     // Insert into ContentData table
-    await db.query(insertContentQuery, [contentDataId, contentId, raw_material, value, highlight]);
-
-    res.status(200).json({ message: 'Data successfully inserted' });
-  } catch (error) {
-    console.error('Error while inserting data:', error);
-    res.status(500).json({ message: 'Error while inserting data' });
-  }
+    db.query(insertContentQuery, [contentDataId, contentId, raw_material, value, highlight], function(error, results) {
+        if (error) {
+            console.error('Error while inserting data:', error);
+            return res.status(500).json({ message: 'Error while inserting data' });
+        }
+        res.status(200).json({ message: 'Data successfully inserted' });
+    });
 }
 
 function getAllTextData(req, res) {
+    const screenId = req.params.screenId;
     // Query to fetch all content items
     const getContentQuery = `
         SELECT *
-        FROM Content
+        FROM Content where screenId = ?
     `;
-    
-    db.query(getContentQuery, (getContentError, getContentResult) => {
+
+    db.query(getContentQuery, [screenId], (getContentError, getContentResult) => {
         if (getContentError) {
             // Handle query error for Content
             return res.status(500).json({ message: 'Error while Fetching Content', error: getContentError });
@@ -328,7 +338,7 @@ function getAllTextData(req, res) {
                     FROM ContentData
                     WHERE content_id = ?
                 `;
-        
+
                 db.query(getContentDataQuery, [contentId], (getContentDataError, getContentDataResult) => {
                     if (getContentDataError) {
                         // Reject with error if ContentData query fails
@@ -370,15 +380,72 @@ function getAllTextData(req, res) {
                     console.error(`Error fetching ContentData for contentId ${contentItem.contentId}:`, error);
                 });
         }))
-        .then(() => {
-            // Send the array of transformed data as a response
-            res.json(transformedDataArray);
-        })
-        .catch(allError => {
-            // Handle any error occurred during Promise.all
-            console.error('Error processing Content and ContentData:', allError);
-            res.status(500).json({ message: 'Error processing Content and ContentData', error: allError });
-        });
+            .then(() => {
+                // Send the array of transformed data as a response
+                res.json(transformedDataArray);
+            })
+            .catch(allError => {
+                // Handle any error occurred during Promise.all
+                console.error('Error processing Content and ContentData:', allError);
+                res.status(500).json({ message: 'Error processing Content and ContentData', error: allError });
+            });
+    });
+}
+
+function UpdateSOPTextData(req, res) {
+    const { contentId, screenId, header, subheader, color, font_size, interval } = req.body;
+
+    // Validate incoming parameters
+    if (!contentId || !screenId || !header || !subheader || !color || !font_size || !interval) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+    }
+
+    const updateContentQuery = `
+      UPDATE Content
+      SET ScreenID = ?, table_header = ?, table_subheader = ?, color = ?, font = ?, interval_number = ?
+      WHERE contentId = ?
+    `;
+
+    // Update Content table
+    db.query(updateContentQuery, [screenId, header, subheader, color, font_size, interval, contentId], (error, result) => {
+        if (error) {
+            console.error('Error while updating data:', error);
+            return res.status(500).json({ message: 'Error while updating data' });
+        }
+
+        if (result.affectedRows > 0) {
+            res.status(200).json({ message: 'Data successfully updated' });
+        } else {
+            res.status(404).json({ message: 'Content not found' });
+        }
+    });
+}
+
+function UpdateSOPTextContentData(req, res) {
+    const { contentDataId, raw_material, value, highlight } = req.body;
+    console.log(req.body);
+
+    // Validate incoming parameters if needed
+    if (!contentDataId || !raw_material || !value) {
+        return res.status(400).json({ message: 'Missing required parameters' });
+    }
+
+    const updateContentQuery = `
+        UPDATE ContentData
+        SET raw_material = ?, value = ?, highlight = ?
+        WHERE content_data_id = ?
+    `;
+
+    // Update ContentData table
+    db.query(updateContentQuery, [raw_material, value, highlight, contentDataId], function(error, results) {
+        if (error) {
+            console.error('Error while updating data:', error);
+            return res.status(500).json({ message: 'Error while updating data' });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Content not found' });
+        }
+        res.status(200).json({ message: 'Data successfully updated' });
     });
 }
 
@@ -397,6 +464,8 @@ module.exports = {
     getSOPDataByScreenId,
     InsertSOPTextData,
     InsertSOPTextContentData,
-    getAllTextData
+    getAllTextData,
+    UpdateSOPTextData,
+    UpdateSOPTextContentData
 }
 

@@ -423,7 +423,6 @@ function UpdateSOPTextData(req, res) {
 
 function UpdateSOPTextContentData(req, res) {
     const { contentDataId, raw_material, value, highlight } = req.body;
-    console.log(req.body);
 
     // Validate incoming parameters if needed
     if (!contentDataId || !raw_material || !value) {
@@ -451,7 +450,6 @@ function UpdateSOPTextContentData(req, res) {
 
 function DeleteSOPTextContentData(req, res) {
     const { contentDataId } = req.params;
-    console.log(contentDataId);
 
     // Validate incoming parameters
     if (!contentDataId) {

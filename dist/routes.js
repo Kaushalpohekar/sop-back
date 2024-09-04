@@ -32,4 +32,5 @@ router.put('/updateScreen/:screenId', dash.updateScreen);
 
 //Screen Display Routes
 router.get('/getSOPDataByScreenId/:screenId', dash.getSOPDataByScreenId);
+
 module.exports = router;

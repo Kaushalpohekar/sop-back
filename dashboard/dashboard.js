@@ -449,6 +449,33 @@ function UpdateSOPTextContentData(req, res) {
     });
 }
 
+function DeleteSOPTextContentData(req, res) {
+    const { contentDataId } = req.body;
+    console.log(req.body);
+
+    // Validate incoming parameters
+    if (!contentDataId) {
+        return res.status(400).json({ message: 'Missing required parameter: contentDataId' });
+    }
+
+    const deleteContentQuery = `
+        DELETE FROM ContentData
+        WHERE content_data_id = ?
+    `;
+
+    // Delete record from ContentData table
+    db.query(deleteContentQuery, [contentDataId], function(error, results) {
+        if (error) {
+            console.error('Error while deleting data:', error);
+            return res.status(500).json({ message: 'Error while deleting data' });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Content not found' });
+        }
+        res.status(200).json({ message: 'Data successfully deleted' });
+    });
+}
+
 
 
 module.exports = {
@@ -466,6 +493,7 @@ module.exports = {
     InsertSOPTextContentData,
     getAllTextData,
     UpdateSOPTextData,
-    UpdateSOPTextContentData
+    UpdateSOPTextContentData,
+    DeleteSOPTextContentData
 }
 

@@ -450,8 +450,8 @@ function UpdateSOPTextContentData(req, res) {
 }
 
 function DeleteSOPTextContentData(req, res) {
-    const { contentDataId } = req.body;
-    console.log(req.body);
+    const { contentDataId } = req.params;
+    console.log(contentDataId);
 
     // Validate incoming parameters
     if (!contentDataId) {

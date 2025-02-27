@@ -21,7 +21,7 @@ function InsertSOPData(req, res) {
     fs.writeFileSync(`./uploads/${uniqueFileName}`, decodedFile);
 
     const insertSOPInputQuery = `
-      INSERT INTO SOP_content(FileName, FilePath, ScreenID, Duration, TimeStamp)
+      INSERT INTO sop_content(FileName, FilePath, ScreenID, Duration, TimeStamp)
       VALUES (?, ?, ?, ?, NOW())
     `;
 
@@ -41,7 +41,7 @@ function InsertSOPData(req, res) {
 
 function getSOPData(req, res) {
     try {
-        const getSOPDataQuery = ' SELECT * FROM SOP_content';
+        const getSOPDataQuery = ' SELECT * FROM sop_content';
 
         db.query(getSOPDataQuery, (getSOPDataError, getSOPDataResult) => {
             if (getSOPDataError) {
@@ -67,7 +67,7 @@ function getSOPData(req, res) {
 
 function deleteSOPData(req, res) {
     const FileName = req.params.FileName;
-    const selectSOPDataQuery = `SELECT FilePath FROM SOP_content WHERE FileName = ?`;
+    const selectSOPDataQuery = `SELECT FilePath FROM sop_content WHERE FileName = ?`;
 
     try {
         db.query(selectSOPDataQuery, [FileName], (selectSOPDataError, selectSOPResult) => {
@@ -79,7 +79,7 @@ function deleteSOPData(req, res) {
                 } else {
                     const filePath = selectSOPResult[0].FilePath;
 
-                    const deleteSOPDataQuery = `DELETE FROM SOP_content WHERE FileName = ?`;
+                    const deleteSOPDataQuery = `DELETE FROM sop_content WHERE FileName = ?`;
 
                     db.query(deleteSOPDataQuery, [FileName], (deleteSOPDataError) => {
                         if (deleteSOPDataError) {
@@ -108,7 +108,7 @@ function deleteSOPData(req, res) {
 const updateSOPData = (req, res) => {
     const ID = req.params.ID;
     const { fileName, filePath, screen, duration } = req.body;
-    const UpdateSOPDataQuery = `UPDATE SOP_content fileName = ?, filePath = ?, screenNo = ?, Duration = ? WHERE ID = ?`;
+    const UpdateSOPDataQuery = `UPDATE sop_content fileName = ?, filePath = ?, screenNo = ?, Duration = ? WHERE ID = ?`;
     db.query(UpdateSOPDataQuery, [fileName, filePath, screen, duration, ID], (UpdateSOPDataError, UpdateSOPDataResult) => {
         if (UpdateSOPDataError) {
             res.status(401).json({ message: 'error while updating SOP Data', UpdateSOPDataError });
@@ -186,7 +186,7 @@ function updateScreen(req, res) {
 function getContentForScreen(req, res) {
     try {
         const { screenName } = req.params;
-        const getContentQuery = `SELECT * FROM SOP_content WHERE ScreenName = ?`;
+        const getContentQuery = `SELECT * FROM sop_content WHERE ScreenName = ?`;
 
         db.query(getContentQuery, [screenName], (getContentError, getContentResult) => {
             if (getContentError) {
@@ -213,7 +213,7 @@ async function getSOPDataByScreenId(req, res) {
 
     const getSOPDataQuery = `
     SELECT FileName, FilePath, ScreenID, Duration, TimeStamp
-    FROM SOP_content
+    FROM sop_content
     WHERE ScreenID = ? order by ID ASC
   `;
 
@@ -268,7 +268,7 @@ function InsertSOPTextData(req, res) {
     const contentId = uuidv4(); // Generate unique contentId
 
     const insertContentQuery = `
-    INSERT INTO Content (contentId, ScreenID, table_header, table_subheader, color, font, interval_number)
+    INSERT INTO content (contentId, ScreenID, table_header, table_subheader, color, font, interval_number)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -294,7 +294,7 @@ function InsertSOPTextContentData(req, res) {
     const contentDataId = uuidv4(); // Generate unique contentDataId
 
     const insertContentQuery = `
-        INSERT INTO ContentData (content_data_id, content_id, raw_material, value, highlight)
+        INSERT INTO contentdata (content_data_id, content_id, raw_material, value, highlight)
         VALUES (?, ?, ?, ?, ?)
     `;
 
@@ -313,7 +313,7 @@ function getAllTextData(req, res) {
     // Query to fetch all content items
     const getContentQuery = `
         SELECT *
-        FROM Content where screenId = ?
+        FROM content where screenId = ?
     `;
 
     db.query(getContentQuery, [screenId], (getContentError, getContentResult) => {
@@ -335,7 +335,7 @@ function getAllTextData(req, res) {
             return new Promise((resolve, reject) => {
                 const getContentDataQuery = `
                     SELECT *
-                    FROM ContentData
+                    FROM contentdata
                     WHERE content_id = ?
                 `;
 
@@ -401,7 +401,7 @@ function UpdateSOPTextData(req, res) {
     }
 
     const updateContentQuery = `
-      UPDATE Content
+      UPDATE content
       SET ScreenID = ?, table_header = ?, table_subheader = ?, color = ?, font = ?, interval_number = ?
       WHERE contentId = ?
     `;
@@ -430,7 +430,7 @@ function UpdateSOPTextContentData(req, res) {
     }
 
     const updateContentQuery = `
-        UPDATE ContentData
+        UPDATE contentdata
         SET raw_material = ?, value = ?, highlight = ?
         WHERE content_data_id = ?
     `;
@@ -457,7 +457,7 @@ function DeleteSOPTextContentData(req, res) {
     }
 
     const deleteContentQuery = `
-        DELETE FROM ContentData
+        DELETE FROM contentdata
         WHERE content_data_id = ?
     `;
 

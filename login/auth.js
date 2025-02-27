@@ -5,8 +5,8 @@ const jwt = require("jsonwebtoken");
 function registerUser(req,res){
   const{userName, password, firstName, lastName, contactNo, userType, companyEmail, location, companyName}=req.body
   const userId = generateUserID();
-  const fetchUserName = `SELECT * FROM  SOP_users WHERE UserName = ?`
-  const insertUserQuery = `INSERT INTO SOP_users(UserId, UserName, Password, FirstName, LastName, Contact, UserType, CompanyEmail, Location, CompanyName) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const fetchUserName = `SELECT * FROM  sop_users WHERE UserName = ?`
+  const insertUserQuery = `INSERT INTO sop_users(UserId, UserName, Password, FirstName, LastName, Contact, UserType, CompanyEmail, Location, CompanyName) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   db.query(fetchUserName, [userName], (fetchUsernameError, fetchUsernameResult) =>{ 
 
@@ -33,7 +33,7 @@ function registerUser(req,res){
 
 function getUserById(req, res){
   const userId = req.params.userId;
-  const getUserByUserIdQuery = `SELECT * FROM SOP_users WHERE UserId = ?`;
+  const getUserByUserIdQuery = `SELECT * FROM sop_users WHERE UserId = ?`;
 
   db.query(getUserByUserIdQuery, [userId], (fetchUserIdError, fetchUserIdResult) =>{
     if(fetchUserIdError){
@@ -45,8 +45,8 @@ function getUserById(req, res){
 
 function getUsers(req, res){
   
-  const fetchUserId =`SELECT * FROM SOP_users WHERE UserName = ?`;
-  const getUserByUserQuery = `SELECT * FROM SOP_users WHERE `;
+  const fetchUserId =`SELECT * FROM sop_users WHERE UserName = ?`;
+  const getUserByUserQuery = `SELECT * FROM sop_users WHERE `;
 
   db.query(getUserByUserQuery, (fetchUserIdError, fetchUserIdResult) =>{
     if(fetchUserIdError){
@@ -59,7 +59,7 @@ function getUsers(req, res){
 
 function login(req, res){
   const {userName, password} = req.body;
-  const checkUserNameQuery = `SELECT * FROM SOP_users where UserName = ?`;
+  const checkUserNameQuery = `SELECT * FROM sop_users where UserName = ?`;
 
   db.query(checkUserNameQuery, [userName], (checkUserNameError, checkUserNameResult) =>{
     if(checkUserNameError){
@@ -96,7 +96,7 @@ function user(req, res){
     return res.status(401).json({message : 'Invalid token'});
   }
 
-  const getUserDetailsQuery = `SELECT * FROM SOP_users WHERE UserName = ?`
+  const getUserDetailsQuery = `SELECT * FROM sop_users WHERE UserName = ?`
   db.query(getUserDetailsQuery, [decodedToken.userName], (fetchUserError, fetchUsernameResult) =>{
     if(fetchUserError){
       return res.status(401).json({message : 'error while fetcing userdetails'});
@@ -121,7 +121,7 @@ function editUser(req , res){
     location
   } = req.body
 
-  const editUserQuery = `UPDATE SOP_users SET UserName = ?, FirstName = ?, LastName = ?, CompanyEmail = ?, Contact = ? , UserType = ? , Location = ? WHERE UserId = ?`;
+  const editUserQuery = `UPDATE sop_users SET UserName = ?, FirstName = ?, LastName = ?, CompanyEmail = ?, Contact = ? , UserType = ? , Location = ? WHERE UserId = ?`;
     db.query(editUserQuery, [
       userName,
       firstName,
